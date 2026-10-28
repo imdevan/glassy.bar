@@ -89,6 +89,7 @@ Item {
     padding: 8,
     radius: "pill",
     opacity: 0,
+    blur: false,
     border: { width: 1, opacity: 0.3 },
     shadow: { depth: 10, opacity: 0.9, tint: 0.22 }
   })
@@ -98,7 +99,10 @@ Item {
   readonly property int pillEdgeGap: glassy.margin.edge
   readonly property int pillSideGap: glassy.margin.sides
   readonly property int pillPadding: glassy.padding
-  readonly property real pillOpacity: glassy.opacity
+  readonly property bool pillBlur: glassy.blur === true
+  // Hyprland skips fully transparent pixels when blurring, so a blurred pill
+  // keeps a barely visible fill for its whole surface to count.
+  readonly property real pillOpacity: pillBlur ? Math.max(glassy.opacity, 0.001) : glassy.opacity
   readonly property int pillBorderWidth: glassy.border.width
   readonly property real pillBorderAlpha: glassy.border.opacity
   // Inner shadow: the theme's background nudged toward its accent, so it
@@ -147,6 +151,27 @@ Item {
     }
     glassy = merged
     position = effectivePosition()
+  }
+
+  // Blur is Hyprland's job, so ask it to blur this layer. Leave Hyprland's
+  // own rules alone until the config turns blur on, and reapply after a
+  // Hyprland config reload, which drops rules added at runtime.
+  property bool glassyBlurApplied: false
+
+  function applyGlassyBlur(force) {
+    if (!force && pillBlur === glassyBlurApplied) return
+    glassyBlurApplied = pillBlur
+    Quickshell.execDetached(["hyprctl", "eval",
+      'hl.layer_rule({ match = { namespace = "omarchy-bar" }, blur = ' + pillBlur + ', ignore_alpha = 0 })'])
+  }
+
+  onPillBlurChanged: applyGlassyBlur(false)
+
+  Connections {
+    target: Hyprland
+    function onRawEvent(event) {
+      if (event && event.name === "configreloaded" && root.pillBlur) root.applyGlassyBlur(true)
+    }
   }
 
   // ~/.config/glassy.bar/config.json wins when it exists, so it can be
