@@ -144,6 +144,20 @@ Item {
     return null
   }
 
+  // Shadow strength d px in from the pill's edge: shadow.opacity at the
+  // edge, easing quadratically to 0 at shadow.depth.
+  function innerShadowAt(d) {
+    var t = Math.max(0, 1 - d / innerShadowDepth)
+    return Math.min(innerShadowOpacity, 0.999) * t * t
+  }
+
+  // Alpha for the shadow layer reaching index+1 px inward. Pixels d px in
+  // are covered by every layer wider than d, so each layer supplies just
+  // the step between innerShadowAt(index + 1) and innerShadowAt(index).
+  function innerShadowLayerAlpha(index) {
+    return 1 - (1 - innerShadowAt(index)) / (1 - innerShadowAt(index + 1))
+  }
+
   function pillRadius(w, h) {
     var max = Math.min(w, h) / 2
     return typeof glassy.radius === "number" ? Math.min(glassy.radius, max) : max
@@ -1460,22 +1474,23 @@ Item {
       border.color: Util.alpha(Commons.Color.accent, root.pillBorderAlpha)
       antialiasing: true
 
-      // Inner shadow: stacked inset outlines that fade toward the center,
-      // so the shadow follows the pill's rounded ends.
+      // Inner shadow: faint borders that all start at the pill's edge and
+      // reach 1..depth px inward. Sharing one outer edge leaves no seams
+      // between layers; per-layer alphas make their overlap follow an
+      // ease-out curve, so the shadow dies away instead of stopping.
       Repeater {
         model: root.innerShadowDepth
 
         Rectangle {
           required property int index
-          readonly property real falloff: 1 - index / root.innerShadowDepth
 
           anchors.fill: parent
-          anchors.margins: index + 1
-          radius: Math.max(0, pill.radius - index - 1)
+          anchors.margins: root.pillBorderWidth
+          radius: Math.max(0, pill.radius - root.pillBorderWidth)
           color: "transparent"
           antialiasing: true
-          border.width: 1
-          border.color: Util.alpha(root.innerShadowColor, root.innerShadowOpacity * falloff * falloff)
+          border.width: index + 1
+          border.color: Util.alpha(root.innerShadowColor, root.innerShadowLayerAlpha(index))
         }
       }
     }
