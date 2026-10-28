@@ -1,5 +1,7 @@
 # Glassy Bar
 
+<img width="1080" height="608" alt="screenshot-2026-10-28_12-45-19" src="https://github.com/user-attachments/assets/de0d6daa-04dc-465a-9c7d-64147fc71c54" />
+
 A floating, see-through pill bar for Omarchy with a soft inner shadow that
 takes its colors from your theme.
 
@@ -71,3 +73,15 @@ Save the file and the bar updates right away.
 ```bash
 omachy plugin remove glassy.bar && rm -rf $HOME/.config/glassy.bar
 ```
+
+## Screenshots
+
+<img width="1080" height="608" alt="screenshot-2026-10-28_13-50-07" src="https://github.com/user-attachments/assets/44d38776-7367-4486-bdba-05c5a5389ede" />
+<img width="1080" height="608" alt="screenshot-2026-10-28_13-42-13" src="https://github.com/user-attachments/assets/535f5eb8-43ac-455f-9376-5bc85dbd3428" />
+<img width="1080" height="608" alt="screenshot-2026-10-28_13-04-24" src="https://github.com/user-attachments/assets/e51f4346-bd5a-42a0-889c-c34eba560ec9" />
+<img width="1080" height="608" alt="screenshot-2026-10-28_12-50-04" src="https://github.com/user-attachments/assets/c0edb0d4-aa7d-4ee6-b495-7c8b1bd28ad9" />
+<img width="1080" height="608" alt="screenshot-2026-10-28_12-47-20" src="https://github.com/user-attachments/assets/f7ec4bf6-a7a3-4ca9-a3db-bb7ce017fd55" />
+<img width="1080" height="608" alt="screenshot-2026-10-28_12-46-54" src="https://github.com/user-attachments/assets/2fe534c6-3945-4ab9-a52e-c936005cf819" />
+<img width="1080" height="608" alt="screenshot-2026-10-28_12-46-07" src="https://github.com/user-attachments/assets/07acf9b9-655a-4f69-ac00-18dca318699c" />
+<img width="1080" height="608" alt="screenshot-2026-10-28_12-43-52" src="https://github.com/user-attachments/assets/92d76694-3e7a-4836-b3a0-99f8efac81b7" />
+<img width="1080" height="608" alt="screenshot-2026-10-28_12-43-20" src="https://github.com/user-attachments/assets/889c8719-b302-43b1-8628-8b52ca3ba4ba" />
