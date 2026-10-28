@@ -57,7 +57,7 @@ Save the file and the bar updates right away.
 | `opacity` | How solid the background is. |
 | `background` | Optional fill color, shown at `opacity`. |
 | `foreground` | Optional color for all bar text and icons. Overrides the wallpaper-matched text color. |
-| `blur` | Blurs whatever is behind the bar. Strength comes from Hyprland's `decoration.blur` settings, which must be enabled. |
+| `blur` | Blurs whatever is behind the bar. Strength comes from Hyprland's `decoration.blur` settings, which must be enabled. Hyprland only blurs pixels that aren't fully clear, so with blur on, `opacity` is at least `0.01`. |
 | `border` | Thin accent-colored outline. `width: 0` hides it. |
 | `shadow.depth` | How far the inner shadow reaches, in pixels. |
 | `shadow.opacity` | How dark the shadow is. |

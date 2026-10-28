@@ -108,7 +108,7 @@ Item {
   readonly property bool pillBlur: glassy.blur === true
   // Hyprland skips fully transparent pixels when blurring, so a blurred pill
   // keeps a barely visible fill for its whole surface to count.
-  readonly property real pillOpacity: pillBlur ? Math.max(glassy.opacity, 0.001) : glassy.opacity
+  readonly property real pillOpacity: pillBlur ? Math.max(glassy.opacity, 0.01) : glassy.opacity
   readonly property int pillBorderWidth: glassy.border.width
   readonly property real pillBorderAlpha: glassy.border.opacity
   // Inner shadow: the theme's background nudged toward its accent, so it
