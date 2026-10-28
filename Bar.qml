@@ -80,16 +80,82 @@ Item {
   property bool foregroundAnimationEnabled: true
   property color background: Commons.Color.bar.background
   property color urgent: Commons.Color.bar.active
-  // Inner shadow drawn inside every bar edge. The color is the theme's
-  // background nudged toward its accent, so it follows the active theme.
-  property color innerShadowColor: Qt.tint(Commons.Color.background, Util.alpha(Commons.Color.accent, 0.22))
-  property real innerShadowOpacity: 0.9
-  property int innerShadowDepth: Math.round(barSize * 0.4)
-  // Floating pill: gap to the screen edge the bar sits on, gap to the two
-  // side edges (match Hyprland gaps_out), and the accent hairline strength.
-  property int pillEdgeGap: 8
-  property int pillSideGap: 8
-  property real pillBorderAlpha: 0.3
+  // Pill look, read from config.json next to this file (see README). Missing
+  // or invalid keys fall back to these defaults.
+  readonly property var glassyDefaults: ({
+    position: "",
+    width: "full",
+    margin: { edge: 8, sides: 8 },
+    padding: 8,
+    radius: "pill",
+    opacity: 0,
+    border: { width: 1, opacity: 0.3 },
+    shadow: { depth: 10, opacity: 0.9, tint: 0.22 }
+  })
+  readonly property string glassyConfigPath: String(Qt.resolvedUrl("config.json")).replace(/^file:\/\//, "")
+  property var glassy: glassyDefaults
+
+  readonly property int pillEdgeGap: glassy.margin.edge
+  readonly property int pillSideGap: glassy.margin.sides
+  readonly property int pillPadding: glassy.padding
+  readonly property real pillOpacity: glassy.opacity
+  readonly property int pillBorderWidth: glassy.border.width
+  readonly property real pillBorderAlpha: glassy.border.opacity
+  // Inner shadow: the theme's background nudged toward its accent, so it
+  // follows the active theme.
+  readonly property color innerShadowColor: Qt.tint(Commons.Color.background, Util.alpha(Commons.Color.accent, glassy.shadow.tint))
+  readonly property real innerShadowOpacity: glassy.shadow.opacity
+  readonly property int innerShadowDepth: glassy.shadow.depth
+
+  // "full", a pixel count, or a percentage string like "80%" of the space
+  // left after the side margins.
+  function pillLength(available) {
+    var w = glassy.width
+    if (typeof w === "number") return Math.min(w, available)
+    if (typeof w === "string" && /%$/.test(w)) return available * Math.max(0, Math.min(100, parseFloat(w))) / 100
+    return available
+  }
+
+  function pillRadius(w, h) {
+    var max = Math.min(w, h) / 2
+    return typeof glassy.radius === "number" ? Math.min(glassy.radius, max) : max
+  }
+
+  function applyGlassyConfig(text) {
+    var user = {}
+    try {
+      // Allow whole-line // comments.
+      var stripped = String(text || "").replace(/^\s*\/\/.*$/gm, "").trim()
+      if (stripped) user = JSON.parse(stripped)
+    } catch (e) {
+      console.warn("glassy.bar: config.json parse failed, using defaults:", e)
+    }
+    var merged = {}
+    for (var key in glassyDefaults) {
+      var base = glassyDefaults[key]
+      var value = user[key]
+      if (Util.isPlainObject(base)) {
+        merged[key] = {}
+        for (var sub in base) {
+          var subValue = Util.isPlainObject(value) ? value[sub] : undefined
+          merged[key][sub] = typeof subValue === "number" ? subValue : base[sub]
+        }
+      } else {
+        merged[key] = value === undefined ? base : value
+      }
+    }
+    glassy = merged
+    position = effectivePosition()
+  }
+
+  FileView {
+    path: root.glassyConfigPath
+    watchChanges: true
+    printErrors: false
+    onFileChanged: reload()
+    onLoaded: root.applyGlassyConfig(text())
+    onLoadFailed: root.applyGlassyConfig("")
+  }
 
   Behavior on barForeground { enabled: root.foregroundAnimationEnabled; ColorAnimation { duration: 420; easing.type: Easing.InOutCubic } }
   Behavior on background { ColorAnimation { duration: 420; easing.type: Easing.InOutCubic } }
@@ -583,6 +649,13 @@ Item {
     return BarModel.normalizePosition(value)
   }
 
+  // config.json's position wins; an empty one defers to shell.json, which
+  // dragging the bar and `omarchy bar position` write to.
+  function effectivePosition() {
+    var config = Util.isPlainObject(barConfig) ? barConfig : fallbackBarConfig
+    return normalizePosition(glassy.position || config.position)
+  }
+
   // Apply tray-pinning on top of the shared layout normalization so the
   // bar host and scriptable config helpers can't drift on entry shape.
   function normalizeLayout(layout) {
@@ -605,7 +678,7 @@ Item {
   function applyBarConfig() {
     var config = Util.isPlainObject(barConfig) ? barConfig : fallbackBarConfig
 
-    position = normalizePosition(config.position)
+    position = effectivePosition()
     setRequestedTransparency(config.transparent === true)
     centerAnchor = Util.canonicalWidgetId(config.centerAnchor || "")
 
@@ -1296,16 +1369,14 @@ Item {
 
     Rectangle {
       id: pill
-      anchors {
-        fill: parent
-        topMargin: root.vertical ? root.pillSideGap : (root.position === "top" ? root.pillEdgeGap : 0)
-        bottomMargin: root.vertical ? root.pillSideGap : (root.position === "bottom" ? root.pillEdgeGap : 0)
-        leftMargin: root.vertical ? (root.position === "left" ? root.pillEdgeGap : 0) : root.pillSideGap
-        rightMargin: root.vertical ? (root.position === "right" ? root.pillEdgeGap : 0) : root.pillSideGap
-      }
-      radius: Math.min(width, height) / 2
-      color: root.transparent ? "transparent" : root.background
-      border.width: 1
+      // Centered along the bar's axis; pinned to the screen edge across it.
+      width: root.vertical ? root.barSize : root.pillLength(parent.width - 2 * root.pillSideGap)
+      height: root.vertical ? root.pillLength(parent.height - 2 * root.pillSideGap) : root.barSize
+      x: root.vertical ? (root.position === "left" ? root.pillEdgeGap : 0) : Math.round((parent.width - width) / 2)
+      y: root.vertical ? Math.round((parent.height - height) / 2) : (root.position === "top" ? root.pillEdgeGap : 0)
+      radius: root.pillRadius(width, height)
+      color: Util.alpha(root.background, root.pillOpacity)
+      border.width: root.pillBorderWidth
       border.color: Util.alpha(Commons.Color.accent, root.pillBorderAlpha)
       antialiasing: true
 
@@ -1331,10 +1402,10 @@ Item {
 
     Loader {
       anchors.fill: pill
-      anchors.leftMargin: root.vertical ? 0 : pill.radius * 0.6
-      anchors.rightMargin: root.vertical ? 0 : pill.radius * 0.6
-      anchors.topMargin: root.vertical ? pill.radius * 0.6 : 0
-      anchors.bottomMargin: root.vertical ? pill.radius * 0.6 : 0
+      anchors.leftMargin: root.vertical ? 0 : root.pillPadding
+      anchors.rightMargin: root.vertical ? 0 : root.pillPadding
+      anchors.topMargin: root.vertical ? root.pillPadding : 0
+      anchors.bottomMargin: root.vertical ? root.pillPadding : 0
       sourceComponent: root.vertical ? verticalBar : horizontalBar
 
       // A child of the loader, not a sibling of the sections: an ancestor stays

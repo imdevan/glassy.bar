@@ -12,6 +12,27 @@ the shell for its whole session.
 - The bar receives its config from the host shell as a `barConfig` property; the host loads it from `~/.config/omarchy/shell.json` (or `config/omarchy/shell.json` when the user has no file).
 - `omarchy bar position` updates only the user shell.json file.
 
+## Glassy look
+
+Glassy Bar is a fork of the Omarchy bar drawn as a floating pill with an
+inner shadow. Its look is set in [`config.json`](config.json) next to this
+file. Saved changes apply live, and missing keys fall back to the defaults.
+
+| Key | Values |
+|-----|--------|
+| `position` | `"top"`, `"bottom"`, `"left"`, `"right"`; `""` defers to shell.json |
+| `width` | `"full"`, pixels, or a percentage like `"80%"`; centered |
+| `margin.edge` / `margin.sides` | Gap to the bar's screen edge / minimum gap to the other edges |
+| `padding` | Space between the pill's ends and the outer widgets |
+| `radius` | `"pill"` or a corner radius in pixels |
+| `opacity` | Background fill, `0` (clear) to `1` (solid theme background) |
+| `border.width` / `border.opacity` | Accent outline; width `0` hides it |
+| `shadow.depth` / `shadow.opacity` / `shadow.tint` | Inner shadow size, strength, and how much theme accent it mixes in |
+
+When `position` is set, it overrides dragging the bar and `omarchy bar position`.
+The shell.json `transparent` flag now only switches the text to a color picked
+from the wallpaper; `opacity` controls the background.
+
 ## Customizing
 
 The bar config lives under the `bar:` key of [`~/.config/omarchy/shell.json`](../../README.md#shelljson-shape). Out of the box the shell uses [`config/omarchy/shell.json`](../../../config/omarchy/shell.json). Once you customize anything via the bar gestures, `omarchy bar ...`, or by editing shell.json directly, your file is canonical — there is no deep-merge.
