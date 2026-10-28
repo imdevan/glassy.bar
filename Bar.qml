@@ -124,8 +124,9 @@ Item {
   function applyGlassyConfig(text) {
     var user = {}
     try {
-      // Allow whole-line // comments.
-      var stripped = String(text || "").replace(/^\s*\/\/.*$/gm, "").trim()
+      // Allow whole-line // comments, and the trailing commas that
+      // commenting out a last key leaves behind.
+      var stripped = String(text || "").replace(/^\s*\/\/.*$/gm, "").replace(/,(\s*[}\]])/g, "$1").trim()
       if (stripped) user = JSON.parse(stripped)
     } catch (e) {
       console.warn("glassy.bar: config.json parse failed, using defaults:", e)
