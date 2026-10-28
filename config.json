@@ -12,6 +12,7 @@
 //   "background": "",                      // fill color; "" = theme
 //   "foreground": "",                      // text/icon color; "" = theme
 //   "blur": false,                         // blur what's behind the bar
+//   "split": false,                        // one pill per bar section instead of one big pill
 //   "border": { "width": 1, "opacity": 0.3 },
 //   "shadow": { "depth": 10, "opacity": 0.9, "tint": 0.22 }
 // }

@@ -96,6 +96,7 @@ Item {
     radius: "pill",
     opacity: 0,
     blur: false,
+    split: false,
     border: { width: 1, opacity: 0.3 },
     shadow: { depth: 10, opacity: 0.9, tint: 0.22 }
   })
@@ -106,6 +107,9 @@ Item {
   readonly property int pillSideGap: glassy.margin.sides
   readonly property int pillPadding: glassy.padding
   readonly property bool pillBlur: glassy.blur === true
+  // Split mode: the full-length pill goes clear and each bar section draws
+  // its own pill around its widgets instead.
+  readonly property bool glassySplit: glassy.split === true
   // Hyprland skips fully transparent pixels when blurring, so a blurred pill
   // keeps a barely visible fill for its whole surface to count.
   readonly property real pillOpacity: pillBlur ? Math.max(glassy.opacity, 0.01) : glassy.opacity
@@ -1461,46 +1465,28 @@ Item {
     // Only the pill takes input; the gaps around it click through.
     mask: Region { item: pill }
 
-    Rectangle {
+    GlassPill {
       id: pill
       // Centered along the bar's axis; pinned to the screen edge across it.
       width: root.vertical ? root.barSize : root.pillLength(parent.width - 2 * root.pillSideGap)
       height: root.vertical ? root.pillLength(parent.height - 2 * root.pillSideGap) : root.barSize
       x: root.vertical ? (root.position === "left" ? root.pillEdgeGap : 0) : Math.round((parent.width - width) / 2)
       y: root.vertical ? Math.round((parent.height - height) / 2) : (root.position === "top" ? root.pillEdgeGap : 0)
-      radius: root.pillRadius(width, height)
-      color: Util.alpha(root.background, root.pillOpacity)
-      border.width: root.pillBorderWidth
-      border.color: Util.alpha(Commons.Color.accent, root.pillBorderAlpha)
-      antialiasing: true
-
-      // Inner shadow: faint borders that all start at the pill's edge and
-      // reach 1..depth px inward. Sharing one outer edge leaves no seams
-      // between layers; per-layer alphas make their overlap follow an
-      // ease-out curve, so the shadow dies away instead of stopping.
-      Repeater {
-        model: root.innerShadowDepth
-
-        Rectangle {
-          required property int index
-
-          anchors.fill: parent
-          anchors.margins: root.pillBorderWidth
-          radius: Math.max(0, pill.radius - root.pillBorderWidth)
-          color: "transparent"
-          antialiasing: true
-          border.width: index + 1
-          border.color: Util.alpha(root.innerShadowColor, root.innerShadowLayerAlpha(index))
-        }
-      }
+      // In split mode this stays fully clear (so Hyprland doesn't blur it
+      // either) and only frames the sections' own pills.
+      color: root.glassySplit ? "transparent" : Util.alpha(root.background, root.pillOpacity)
+      border.width: root.glassySplit ? 0 : root.pillBorderWidth
+      shadowVisible: !root.glassySplit
     }
 
     Loader {
       anchors.fill: pill
-      anchors.leftMargin: root.vertical ? 0 : root.pillPadding
-      anchors.rightMargin: root.vertical ? 0 : root.pillPadding
-      anchors.topMargin: root.vertical ? root.pillPadding : 0
-      anchors.bottomMargin: root.vertical ? root.pillPadding : 0
+      // Split sections pad themselves inside their own pills.
+      readonly property int endPadding: root.glassySplit ? 0 : root.pillPadding
+      anchors.leftMargin: root.vertical ? 0 : endPadding
+      anchors.rightMargin: root.vertical ? 0 : endPadding
+      anchors.topMargin: root.vertical ? endPadding : 0
+      anchors.bottomMargin: root.vertical ? endPadding : 0
       sourceComponent: root.vertical ? verticalBar : horizontalBar
 
       // A child of the loader, not a sibling of the sections: an ancestor stays
@@ -1584,17 +1570,22 @@ Item {
       Item {
         anchors.fill: parent
 
+        SectionPill { start: leftModules.x; length: leftModules.width }
+        SectionPill { start: rightModules.x; length: rightModules.width }
+
         CenterModules { anchors.fill: parent }
 
         LeftModules {
+          id: leftModules
           anchors.left: parent.left
-          anchors.leftMargin: Style.space(8)
+          anchors.leftMargin: root.sectionEndInset
           anchors.verticalCenter: parent.verticalCenter
         }
 
         RightModules {
+          id: rightModules
           anchors.right: parent.right
-          anchors.rightMargin: Style.space(8)
+          anchors.rightMargin: root.sectionEndInset
           anchors.verticalCenter: parent.verticalCenter
         }
       }
@@ -1606,17 +1597,22 @@ Item {
       Item {
         anchors.fill: parent
 
+        SectionPill { start: leftModules.y; length: leftModules.height }
+        SectionPill { start: rightModules.y; length: rightModules.height }
+
         CenterModules { anchors.fill: parent }
 
         LeftModules {
+          id: leftModules
           anchors.top: parent.top
-          anchors.topMargin: Style.space(8)
+          anchors.topMargin: root.sectionEndInset
           anchors.horizontalCenter: parent.horizontalCenter
         }
 
         RightModules {
+          id: rightModules
           anchors.bottom: parent.bottom
-          anchors.bottomMargin: Style.space(8)
+          anchors.bottomMargin: root.sectionEndInset
           anchors.horizontalCenter: parent.horizontalCenter
         }
       }
@@ -1752,6 +1748,58 @@ Item {
     return idx === -1 ? null : entries[idx]
   }
 
+  // Gap between the bar's ends and the left/right sections. Split pills
+  // reach `padding` past their widgets, so their outer ends land on the
+  // bar's ends.
+  readonly property int sectionEndInset: glassySplit ? pillPadding : Style.space(8)
+
+  // The glass look shared by the full bar pill and split section pills:
+  // fill, accent border, and inner shadow.
+  component GlassPill: Rectangle {
+    id: glass
+
+    property bool shadowVisible: true
+
+    radius: root.pillRadius(width, height)
+    color: Util.alpha(root.background, root.pillOpacity)
+    border.width: root.pillBorderWidth
+    border.color: Util.alpha(Commons.Color.accent, root.pillBorderAlpha)
+    antialiasing: true
+
+    // Inner shadow: faint borders that all start at the pill's edge and
+    // reach 1..depth px inward. Sharing one outer edge leaves no seams
+    // between layers; per-layer alphas make their overlap follow an
+    // ease-out curve, so the shadow dies away instead of stopping.
+    Repeater {
+      model: glass.shadowVisible ? root.innerShadowDepth : 0
+
+      Rectangle {
+        required property int index
+
+        anchors.fill: parent
+        anchors.margins: glass.border.width
+        radius: Math.max(0, glass.radius - glass.border.width)
+        color: "transparent"
+        antialiasing: true
+        border.width: index + 1
+        border.color: Util.alpha(root.innerShadowColor, root.innerShadowLayerAlpha(index))
+      }
+    }
+  }
+
+  // One section's pill in split mode: spans `length` px from `start` along
+  // the bar (plus `padding` at each end) and the bar's full thickness.
+  component SectionPill: GlassPill {
+    property real start: 0
+    property real length: 0
+
+    visible: root.glassySplit && length > 0
+    x: root.vertical ? 0 : start - root.pillPadding
+    y: root.vertical ? start - root.pillPadding : 0
+    width: root.vertical ? parent.width : length + 2 * root.pillPadding
+    height: root.vertical ? length + 2 * root.pillPadding : parent.height
+  }
+
   component LeftModules: ModuleList {
     entries: root.layoutEntries("left")
     region: "left"
@@ -1786,7 +1834,19 @@ Item {
           onHoveredChanged: root.setCenterSectionHovered(hovered)
         }
 
+        // Spans whichever center lists are showing: the plain list, or
+        // before-anchor through after-anchor.
+        SectionPill {
+          start: centerRoot.hasAnchor
+            ? (centerBefore.width > 0 ? centerBefore.x : centerAnchorModule.x)
+            : centerAll.x
+          length: (centerRoot.hasAnchor
+            ? (centerAfter.width > 0 ? centerAfter.x + centerAfter.width : centerAnchorModule.x + centerAnchorModule.width)
+            : centerAll.x + centerAll.width) - start
+        }
+
         ModuleList {
+          id: centerAll
           visible: !centerRoot.hasAnchor
           entries: centerRoot.entries
           region: "center"
@@ -1794,6 +1854,7 @@ Item {
         }
 
         ModuleList {
+          id: centerBefore
           visible: centerRoot.hasAnchor
           entries: root.entriesBefore(centerRoot.entries, root.centerAnchor)
           region: "center"
@@ -1810,6 +1871,7 @@ Item {
         }
 
         ModuleList {
+          id: centerAfter
           visible: centerRoot.hasAnchor
           entries: root.entriesAfter(centerRoot.entries, root.centerAnchor)
           region: "center"
@@ -1831,7 +1893,17 @@ Item {
           onHoveredChanged: root.setCenterSectionHovered(hovered)
         }
 
+        SectionPill {
+          start: centerRoot.hasAnchor
+            ? (centerBefore.height > 0 ? centerBefore.y : centerAnchorModule.y)
+            : centerAll.y
+          length: (centerRoot.hasAnchor
+            ? (centerAfter.height > 0 ? centerAfter.y + centerAfter.height : centerAnchorModule.y + centerAnchorModule.height)
+            : centerAll.y + centerAll.height) - start
+        }
+
         ModuleList {
+          id: centerAll
           visible: !centerRoot.hasAnchor
           entries: centerRoot.entries
           region: "center"
@@ -1839,6 +1911,7 @@ Item {
         }
 
         ModuleList {
+          id: centerBefore
           visible: centerRoot.hasAnchor
           entries: root.entriesBefore(centerRoot.entries, root.centerAnchor)
           region: "center"
@@ -1855,6 +1928,7 @@ Item {
         }
 
         ModuleList {
+          id: centerAfter
           visible: centerRoot.hasAnchor
           entries: root.entriesAfter(centerRoot.entries, root.centerAnchor)
           region: "center"

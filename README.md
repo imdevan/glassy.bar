@@ -37,6 +37,7 @@ Create `~/.config/glassy.bar/config.json`. Every key is optional:
   "radius": "pill",                      // "pill" or pixels (0 = square)
   "opacity": 0,                          // 0 = clear glass, 1 = solid
   "blur": false,                         // frost what's behind the bar
+  "split": false,                        // one pill per section instead of one bar
   "background": "",                      // "" = theme, "#1e1e2e", or "accent"
   "foreground": "",                      // "" = theme, "#cdd6f4", or "accent"
   "border": { "width": 1, "opacity": 0.3 },
@@ -58,6 +59,7 @@ Save the file and the bar updates right away.
 | `background` | Optional fill color, shown at `opacity`. |
 | `foreground` | Optional color for all bar text and icons. Overrides the wallpaper-matched text color. |
 | `blur` | Blurs whatever is behind the bar. Strength comes from Hyprland's `decoration.blur` settings, which must be enabled. Hyprland only blurs pixels that aren't fully clear, so with blur on, `opacity` is at least `0.01`. |
+| `split` | Gives the left, center, and right sections their own pill (fill, border, shadow, blur) and leaves the space between them clear, so the bar reads as separate floating pieces. `padding` becomes the space inside each section's pill. Empty sections draw nothing. |
 | `border` | Thin accent-colored outline. `width: 0` hides it. |
 | `shadow.depth` | How far the inner shadow reaches, in pixels. |
 | `shadow.opacity` | How dark the shadow is. |
