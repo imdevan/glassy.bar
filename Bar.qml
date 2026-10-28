@@ -148,13 +148,37 @@ Item {
     position = effectivePosition()
   }
 
+  // ~/.config/glassy.bar/config.json wins when it exists, so it can be
+  // stowed; otherwise the config.json bundled with the plugin is used.
+  readonly property string glassyUserConfigPath: home + "/.config/glassy.bar/config.json"
+  property bool glassyUserConfigFound: false
+  property string glassyBundledConfigText: ""
+
+  FileView {
+    path: root.glassyUserConfigPath
+    watchChanges: true
+    printErrors: false
+    onFileChanged: reload()
+    onLoaded: {
+      root.glassyUserConfigFound = true
+      root.applyGlassyConfig(text())
+    }
+    onLoadFailed: {
+      root.glassyUserConfigFound = false
+      root.applyGlassyConfig(root.glassyBundledConfigText)
+    }
+  }
+
   FileView {
     path: root.glassyConfigPath
     watchChanges: true
     printErrors: false
     onFileChanged: reload()
-    onLoaded: root.applyGlassyConfig(text())
-    onLoadFailed: root.applyGlassyConfig("")
+    onLoaded: {
+      root.glassyBundledConfigText = text()
+      if (!root.glassyUserConfigFound) root.applyGlassyConfig(root.glassyBundledConfigText)
+    }
+    onLoadFailed: root.glassyBundledConfigText = ""
   }
 
   Behavior on barForeground { enabled: root.foregroundAnimationEnabled; ColorAnimation { duration: 420; easing.type: Easing.InOutCubic } }

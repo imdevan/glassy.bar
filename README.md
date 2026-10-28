@@ -15,8 +15,11 @@ the shell for its whole session.
 ## Glassy look
 
 Glassy Bar is a fork of the Omarchy bar drawn as a floating pill with an
-inner shadow. Its look is set in [`config.json`](config.json) next to this
-file. Saved changes apply live, and missing keys fall back to the defaults.
+inner shadow. Its look is read from `~/.config/glassy.bar/config.json` when
+that file exists (handy for stowing your own config), otherwise from the
+[`config.json`](config.json) bundled next to this file. Saved changes apply
+live, and missing keys fall back to the defaults. Creating the user file for
+the first time needs `omarchy restart shell` to be noticed.
 
 | Key | Values |
 |-----|--------|

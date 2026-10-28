@@ -1,4 +1,5 @@
 // Glassy Bar look. Saved changes apply live; whole-line // comments are allowed.
+// ~/.config/glassy.bar/config.json, when present, is used instead of this file.
 //
 // position: "top", "bottom", "left" or "right"; "" uses shell.json (bar dragging / `omarchy bar position`)
 // width:   "full", pixels (1200), or a percentage of the screen ("80%"); centered
