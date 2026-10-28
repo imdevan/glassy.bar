@@ -65,7 +65,8 @@ Save the file and the bar updates right away.
 
 ## Good to know
 
-- **No config file?** The bar uses the `config.json` that ships with the plugin.
+- **Everything is optional.** An empty file, `{}`, or no file at all gives you
+  the defaults. Values of the wrong type are ignored.
 - **Created the file just now?** Run `omarchy restart shell` once. After that, edits apply live.
 - **Colors** take `"#rgb"`, `"#rrggbb"`, `"#aarrggbb"`, or a theme color name:
   `background`, `foreground`, `accent`, `muted`, `urgent`. Leave them `""` to

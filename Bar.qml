@@ -159,6 +159,9 @@ Item {
     } catch (e) {
       console.warn("glassy.bar: config.json parse failed, using defaults:", e)
     }
+    // Every key is optional: an empty file, `{}`, or a missing, null, or
+    // wrong-typed value all fall back to glassyDefaults.
+    if (!Util.isPlainObject(user)) user = {}
     var merged = {}
     for (var key in glassyDefaults) {
       var base = glassyDefaults[key]
@@ -169,8 +172,11 @@ Item {
           var subValue = Util.isPlainObject(value) ? value[sub] : undefined
           merged[key][sub] = typeof subValue === "number" ? subValue : base[sub]
         }
+      } else if (key === "width" || key === "radius") {
+        // A keyword string ("full", "pill") or a number.
+        merged[key] = typeof value === "number" || typeof value === "string" ? value : base
       } else {
-        merged[key] = value === undefined ? base : value
+        merged[key] = typeof value === typeof base ? value : base
       }
     }
     glassy = merged
