@@ -165,16 +165,16 @@ function pickDrawnSlot(slots) {
 // a single monitor, or when the focused output has no bar of its own.
 function pickPanelSlot(candidates, focusedScreen) {
   var rows = Array.isArray(candidates) ? candidates : []
-  var pool = rows.filter(function(row) { return row && row.opened === true })
-  if (pool.length === 0) pool = rows.filter(function(row) { return !!row })
+  var pool = rows.filter(function (row) { return row && row.opened === true })
+  if (pool.length === 0) pool = rows.filter(function (row) { return !!row })
 
   var focused = String(focusedScreen || "")
   if (focused) {
-    var onFocused = pool.filter(function(row) { return row.screenName === focused })
+    var onFocused = pool.filter(function (row) { return row.screenName === focused })
     if (onFocused.length > 0) pool = onFocused
   }
 
-  return pickDrawnSlot(pool.map(function(row) { return row.slot }))
+  return pickDrawnSlot(pool.map(function (row) { return row.slot }))
 }
 
 // Resolve a pointer anywhere along the bar to the closest insertion edge.
