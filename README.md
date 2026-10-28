@@ -9,24 +9,17 @@ commands work exactly the same. Only the look changes.
 ## Install
 
 ```sh
-omarchy plugin add https://github.com/imdevan/glassy.bar
-```
-
-Then make it your bar. In `~/.config/omarchy/shell.json`, set:
-
-```json
-"bar": { "id": "glassy.bar", ... }
-```
-
-and restart the shell:
-
-```sh
-omarchy restart shell
+omarchy plugin add https://github.com/imdevan/glassy.bar --enable
 ```
 
 ## Configure
 
-Create `~/.config/glassy.bar/config.json`. Every key is optional:
+Create `~/.config/glassy.bar/config.json`:
+
+Copy from plugin example (after install):
+```bash
+mkdir $HOME/.config/glassy.bar && cp $HOME/.config/omarchy/plugins/glassy.bar/config.json $HOME/.config/glassy.bar
+```
 
 ```jsonc
 {
@@ -65,25 +58,16 @@ Save the file and the bar updates right away.
 | `shadow.opacity` | How dark the shadow is. |
 | `shadow.tint` | How much of your theme's accent color is mixed in (0 to 1). |
 
-## Good to know
+### Colors
 
-- **Everything is optional.** An empty file, `{}`, or no file at all gives you
-  the defaults. Values of the wrong type are ignored.
-- **Created the file just now?** Run `omarchy restart shell` once. After that, edits apply live.
 - **Colors** take `"#rgb"`, `"#rrggbb"`, `"#aarrggbb"`, or a theme color name:
   `background`, `foreground`, `accent`, `muted`, `urgent`. Leave them `""` to
   follow your theme.
-- **Comments are fine.** Lines starting with `//` and trailing commas are both allowed.
-- **Bar fell back to defaults?** The file probably has a typo. Check with
-  `journalctl --user -b | grep glassy.bar`.
-- **Stowing your dotfiles?** Put the file at
-  `<package>/.config/glassy.bar/config.json`.
-- **Text color:** double-click empty space in the middle of the bar to switch
-  the text to a color that adapts to your wallpaper. This doesn't change the
-  background; `opacity` does.
 
-## Widget authors
 
-To match other icons, color bar content with `bar.barForeground`, not
-`bar.foreground`. The first follows the wallpaper-aware text color; the
-second is the raw theme color and can clash on a transparent bar.
+
+## Remove
+
+```bash
+omachy plugin remove glassy.bar && rm -rf $HOME/.config/glassy.bar
+```
