@@ -37,6 +37,8 @@ Create `~/.config/glassy.bar/config.json`. Every key is optional:
   "radius": "pill",                      // "pill" or pixels (0 = square)
   "opacity": 0,                          // 0 = clear glass, 1 = solid
   "blur": false,                         // frost what's behind the bar
+  "background": "",                      // "" = theme, "#1e1e2e", or "accent"
+  "foreground": "",                      // "" = theme, "#cdd6f4", or "accent"
   "border": { "width": 1, "opacity": 0.3 },
   "shadow": { "depth": 10, "opacity": 0.9, "tint": 0.22 }
 }
@@ -53,6 +55,8 @@ Save the file and the bar updates right away.
 | `padding` | Space between the pill's ends and the first/last widget. |
 | `radius` | Corner roundness. |
 | `opacity` | How solid the background is. |
+| `background` | Optional fill color, shown at `opacity`. |
+| `foreground` | Optional color for all bar text and icons. Overrides the wallpaper-matched text color. |
 | `blur` | Blurs whatever is behind the bar. Strength comes from Hyprland's `decoration.blur` settings, which must be enabled. |
 | `border` | Thin accent-colored outline. `width: 0` hides it. |
 | `shadow.depth` | How far the inner shadow reaches, in pixels. |
@@ -63,6 +67,9 @@ Save the file and the bar updates right away.
 
 - **No config file?** The bar uses the `config.json` that ships with the plugin.
 - **Created the file just now?** Run `omarchy restart shell` once. After that, edits apply live.
+- **Colors** take `"#rgb"`, `"#rrggbb"`, `"#aarrggbb"`, or a theme color name:
+  `background`, `foreground`, `accent`, `muted`, `urgent`. Leave them `""` to
+  follow your theme.
 - **Comments are fine.** Lines starting with `//` and trailing commas are both allowed.
 - **Bar fell back to defaults?** The file probably has a typo. Check with
   `journalctl --user -b | grep glassy.bar`.

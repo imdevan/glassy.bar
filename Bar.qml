@@ -75,15 +75,21 @@ Item {
   property color themeForeground: Commons.Color.bar.text
   property color themeContrastForeground: Commons.Color.background
   property color transparentForeground: Commons.Color.bar.text
-  property color foreground: themeForeground
-  property color barForeground: useTransparentForeground ? transparentForeground : themeForeground
+  // config.json's foreground/background, when set, win over the theme and
+  // over the wallpaper-picked transparent foreground.
+  readonly property var glassyForeground: resolveGlassyColor(glassy.foreground)
+  readonly property var glassyBackground: resolveGlassyColor(glassy.background)
+  property color foreground: glassyForeground !== null ? glassyForeground : themeForeground
+  property color barForeground: glassyForeground !== null ? glassyForeground : (useTransparentForeground ? transparentForeground : themeForeground)
   property bool foregroundAnimationEnabled: true
-  property color background: Commons.Color.bar.background
+  property color background: glassyBackground !== null ? glassyBackground : Commons.Color.bar.background
   property color urgent: Commons.Color.bar.active
   // Pill look, read from config.json next to this file (see README). Missing
   // or invalid keys fall back to these defaults.
   readonly property var glassyDefaults: ({
     position: "",
+    background: "",
+    foreground: "",
     width: "full",
     margin: { edge: 8, sides: 8 },
     padding: 8,
@@ -106,7 +112,7 @@ Item {
   readonly property int pillBorderWidth: glassy.border.width
   readonly property real pillBorderAlpha: glassy.border.opacity
   // Inner shadow: the theme's background nudged toward its accent, so it
-  // follows the active theme.
+  // follows the active theme (not the config's background override).
   readonly property color innerShadowColor: Qt.tint(Commons.Color.background, Util.alpha(Commons.Color.accent, glassy.shadow.tint))
   readonly property real innerShadowOpacity: glassy.shadow.opacity
   readonly property int innerShadowDepth: glassy.shadow.depth
@@ -118,6 +124,24 @@ Item {
     if (typeof w === "number") return Math.min(w, available)
     if (typeof w === "string" && /%$/.test(w)) return available * Math.max(0, Math.min(100, parseFloat(w))) / 100
     return available
+  }
+
+  // "" means use the theme. Accepts #rgb/#rrggbb/#aarrggbb or a theme color
+  // name; anything else is ignored with a warning.
+  function resolveGlassyColor(value) {
+    var v = typeof value === "string" ? value.trim() : ""
+    if (v === "") return null
+    var theme = {
+      background: Commons.Color.background,
+      foreground: Commons.Color.foreground,
+      accent: Commons.Color.accent,
+      muted: Commons.Color.muted,
+      urgent: Commons.Color.urgent
+    }
+    if (theme.hasOwnProperty(v)) return theme[v]
+    if (/^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(v)) return v
+    console.warn("glassy.bar: ignoring invalid color:", v)
+    return null
   }
 
   function pillRadius(w, h) {
